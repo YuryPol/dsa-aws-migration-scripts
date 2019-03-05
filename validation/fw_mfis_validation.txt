@@ -1,3 +1,4 @@
+# for patial testing
 for i in `seq 1 1 9`; do \
   date_part=`date -d "2019-01-12+$i days" +"%Y-%m-%d"`; \
   aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/logs/freewheel_data_mfis/date_fw=$date_part \
@@ -5,38 +6,33 @@ for i in `seq 1 1 9`; do \
 
 
 
-
-date_start="2018-01-01"; \
-for m in `seq 1 1 12`; do \
+# counting data sizes in AWS
+echo "starting AWS count"
+echo "AWS counts"; \
+date_start="2015-01-01"; \
+echo $date_start; \
+for mns in `seq 1 36`; do \
  cnt=0; \
- date_end=`date -d "$date_start+$m month" +"%Y-%m-%d"`; \
- echo $date_end; \
- while [ "$date_end" != "$date_start" ]; do \
-  date_part_next=$date_start; \
+ date_end=`date -d "$date_start+1 month" +"%Y-%m-%d"`; \
+ date_part_next=$date_start; \
+ while [ "$date_end" != "$date_part_next" ]; do \
   day_cnt=`aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/logs/freewheel_data_mfis/date_fw=$date_part_next \
   --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'`;\
   cnt=`expr "$cnt" + "$day_cnt"`; \
-  echo $cnt
-  date_part_next=`date -d "$date_part_next+$i day" +"%Y-%m-%d"`; \
-  echo $date_part_next; \
+  echo $day_cnt; \
+  date_part_next=`date -d "$date_part_next+1 day" +"%Y-%m-%d"`; \
  done; \
  echo $cnt; \
  date_start=$date_end; \
-done
+ echo $date_end; \
+done &> aws_counts.txt
 
 
+aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/logs/freewheel_data_mfis/date_fw=2018-01-01 --recursive --summarize
 
+hdfs dfs -du -s /data/ABC-FREEWHEEL-PROD/mfis/abc_freewheel/partitions/201801*/
 
-
-hdfs dfs -du -s -h /data/ABC-FREEWHEEL-PROD/mfis/fw_data_v4/partitions/201803*/
-
-hdfs dfs -du -s -h /data/ABC-FREEWHEEL-PROD/mfis/abc_freewheel/partitions/2013100*/
-
-date -d "2019-01-12+10 days" +"%Y-%m-%d"
-
-QUERY_DATE=`date -u -d '1 day ago' +"%Y-%m-%d"`
-echo $QUERY_DATE
-
+# more partial testing
 for i in `seq 1 1 9`; do \
   date_part=`date -d "2019-01-12+$i days" +"%Y-%m-%d"`; \
   echo $date_part; done
@@ -45,3 +41,23 @@ i=10
 date_part=`date -d "2019-01-12+$i days" +"%Y-%m-%d"`
 echo $date_part
 
+hdfs dfs -du -s /data/ABC-FREEWHEEL-PROD/mfis/abc_freewheel/partitions/20140101/  | awk 'BEGIN {total=0}{total+=$1}END{print total}
+
+# counting data sizes in NAP7 
+echo "starting HDFS count"
+date_start="20150101"; \
+for mns in `seq 1 36`; do \
+ cnt=0; \
+ date_end=`date -d "$date_start+1 month" +"%Y%m%d"`; \
+ date_part_next=$date_start; \
+ while [ "$date_end" != "$date_part_next" ]; do \
+  day_cnt=`hdfs dfs -du -s /data/ABC-FREEWHEEL-PROD/mfis/abc_freewheel/partitions/$date_part_next/ \
+  | awk 'BEGIN {total=0}{total+=$1}END{print total}'`;\
+  cnt=`expr "$cnt" + "$day_cnt"`; \
+  echo $day_cnt; \
+  date_part_next=`date -d "$date_part_next+1 days" +"%Y%m%d"`; \
+ done; \
+ echo $cnt; \
+ date_start=$date_end; \
+ echo $date_end; \
+done &> nap7_counts.txt
