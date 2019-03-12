@@ -4,6 +4,8 @@ for i in `seq 1 1 9`; do \
   aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/logs/freewheel_data_mfis/date_fw=$date_part \
   --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'; done
 
+hdfs dfs -du -s /data/ABC-FREEWHEEL-PROD/v4/clean/date_fw=2018-11-11/ \
+  | awk 'BEGIN {total=0}{total+=$1}END{print total}'
 
 
 # counting data sizes in AWS
@@ -94,6 +96,47 @@ for mns in `seq 1 11`; do \
  date_part_next=$date_start; \
  while [ "$date_end" != "$date_part_next" ]; do \
   day_cnt=`aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/logs/nap_freewheel_data_mfis/date_fw=$date_part_next \
+  --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'`;\
+  cnt=`expr "$cnt" + "$day_cnt"`; \
+  echo $day_cnt; \
+  date_part_next=`date -d "$date_part_next+1 day" +"%Y-%m-%d"`; \
+ done; \
+ echo $cnt; \
+ date_start=$date_end; \
+ echo $date_end; \
+done &> aws_counts.txt
+
+# counting asset views data sizes in NAP7 (v4)
+echo "starting HDFS count"
+date_start="2019-02-01"; \
+echo $date_start; \
+for mns in `seq 1 2`; do \
+ cnt=0; \
+ date_end=`date -d "$date_start+1 month" +"%Y%m%d"`; \
+ date_part_next=$date_start; \
+ while [ "$date_end" != "$date_part_next" ]; do \
+  day_cnt=`hdfs dfs -du -s /data/ABC-VIDLOG-PROD/video/asset_views/date_pst=$date_part_next/ \
+  | awk 'BEGIN {total=0}{total+=$1}END{print total}'`;\
+  cnt=`expr "$cnt" + "$day_cnt"`; \
+  echo $day_cnt; \
+  date_part_next=`date -d "$date_part_next+1 days" +"%Y-%m-%d"`; \
+ done; \
+ echo $cnt; \
+ date_start=$date_end; \
+ echo $date_end; \
+done &> nap7_counts.txt
+
+# countion asset views
+echo "starting AWS count"
+echo "AWS counts"; \
+date_start="2019-02-01"; \
+echo $date_start; \
+for mns in `seq 1 2`; do \
+ cnt=0; \
+ date_end=`date -d "$date_start+1 month" +"%Y-%m-%d"`; \
+ date_part_next=$date_start; \
+ while [ "$date_end" != "$date_part_next" ]; do \
+  day_cnt=`aws s3 ls s3://datg-daa-dvdm-prod-warehouse/video/asset_views_nap7/date_pst=$date_part_next \
   --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'`;\
   cnt=`expr "$cnt" + "$day_cnt"`; \
   echo $day_cnt; \
