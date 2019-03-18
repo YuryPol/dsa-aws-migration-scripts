@@ -11,9 +11,9 @@ hdfs dfs -du -s /data/ABC-FREEWHEEL-PROD/v4/clean/date_fw=2018-11-11/ \
 # counting data sizes in AWS
 echo "starting AWS count"
 echo "AWS counts"; \
-date_start="2018-04-01"; \
+date_start="2018-11-01"; \
 echo $date_start; \
-for mns in `seq 1 11`; do \
+for mns in `seq 1 5`; do \
  cnt=0; \
  date_end=`date -d "$date_start+1 month" +"%Y-%m-%d"`; \
  date_part_next=$date_start; \
@@ -88,9 +88,9 @@ done &> nap7_counts.txt
 # counting data sizes in AWS backup
 echo "starting AWS count"
 echo "AWS counts"; \
-date_start="2018-04-01"; \
+date_start="2018-11-01"; \
 echo $date_start; \
-for mns in `seq 1 11`; do \
+for mns in `seq 1 5`; do \
  cnt=0; \
  date_end=`date -d "$date_start+1 month" +"%Y-%m-%d"`; \
  date_part_next=$date_start; \
@@ -104,7 +104,7 @@ for mns in `seq 1 11`; do \
  echo $cnt; \
  date_start=$date_end; \
  echo $date_end; \
-done &> aws_counts.txt
+done &> aws_counts_backup.txt
 
 # counting asset views data sizes in NAP7 (v4)
 echo "starting HDFS count"
@@ -147,3 +147,23 @@ for mns in `seq 1 2`; do \
  echo $date_end; \
 done &> aws_counts.txt
 
+# countion otv_fw_impressions
+echo "starting AWS count"
+echo "AWS counts"; \
+date_start="2018-04-01"; \
+echo $date_start; \
+for mns in `seq 1 11`; do \
+ cnt=0; \
+ date_end=`date -d "$date_start+1 month" +"%Y-%m-%d"`; \
+ date_part_next=$date_start; \
+ while [ "$date_end" != "$date_part_next" ]; do \
+  day_cnt=`aws s3 ls s3://datg-daa-dvdm-prod-freewheel-stage/freewheel/otv_fw_impressions/date_fw=2019-01-24=$date_part_next \
+  --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'`;\
+  cnt=`expr "$cnt" + "$day_cnt"`; \
+  echo $day_cnt; \
+  date_part_next=`date -d "$date_part_next+1 day" +"%Y-%m-%d"`; \
+ done; \
+ echo $cnt; \
+ date_start=$date_end; \
+ echo $date_end; \
+done &> aws_counts.txt
