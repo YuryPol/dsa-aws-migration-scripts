@@ -1,0 +1,17 @@
+echo "starting AWS omniture count"
+echo "AWS omniture counts"; \
+date_start="2019-01-01"; \
+date_end="2019-01-08"; \
+echo $date_start; \
+echo $date_end; \
+date_part_next=$date_start; \
+week_cnt=0; \
+while [ "$date_end" != "$date_part_next" ]; do \
+  day_cnt=`aws s3 ls s3://datg-daa-dvdm-prod-omniture-stage/abc_datg/omniture_data/business_unit=ABC/date_suite=$date_part_next \
+  --recursive | awk 'BEGIN {total=0}{total+=$3}END{print total}'`;\
+  echo $day_cnt; \
+  week_cnt=`expr "$week_cnt" + "$day_cnt"`; \
+  date_part_next=`date -d "$date_part_next+1 day" +"%Y-%m-%d"`; \
+  echo $date_part_next; \
+done; \
+echo $week_cnt
